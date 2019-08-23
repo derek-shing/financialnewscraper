@@ -1,14 +1,23 @@
 import boto3
 import json
+from os import path
+from utils import Utils
 
 LAMBDA_ACCESS_POLICY_ARN = "arn:aws:iam::093500706723:policy/LambdaS3AcccessPolicy"
 LAMBDA_ROLE = "Lambda_Execution_Role"
+LAMBDA_HANDLER = 'lambda_function.handler'
 
 LAMBBDA_ROLE_ARN ="arn:aws:iam::093500706723:role/Lambda_Execution_Role"
+LAMBDA_TIMEOUT = 10
+LAMBDA_MEMORY = 128
+PYTHON_36_RUNTIME = 'python3.6'
+PYTHON_LAMBDA_NAME = 'pythonLambdaFunction'
+
+
 
 
 def lambda_client():
-    aws_lambda = boto3.client('lambda',region = 'eu-west-1')
+    aws_lambda = boto3.client('lambda',region_name = 'eu-west-1')
     return aws_lambda
 
 
@@ -66,11 +75,34 @@ def attach_policy_to_exection_role():
         PolicyArn=LAMBDA_ACCESS_POLICY_ARN
     )
 
+def deploy_lambda_function(function_name, runtime, handler, role_arn, source_folder):
+    folder_path = path.join(path.dirname(path.abspath(__file__)),source_folder)
+    zip_file = Utils.make_zip_file_bytes(path=folder_path)
+    return lambda_client().create_function(
+        FunctionName = function_name,
+        Runtime=runtime,
+        Role=role_arn,
+        Handler=handler,
+        Code={
+            'ZipFile':zip_file
+        },
+        Timeout = LAMBDA_TIMEOUT,
+        MemorySize = LAMBDA_MEMORY,
+        Publish = False
+    )
 
+    pass
 
 
 if __name__ =="__main__":
     #print (create_access_policy_for_lambda())
     #print(create_execution_role_for_lambda())
-    print(attach_policy_to_exection_role())
+    #print(attach_policy_to_exection_role())
+    print(deploy_lambda_function(
+        PYTHON_LAMBDA_NAME,
+        PYTHON_36_RUNTIME,
+        LAMBDA_HANDLER,
+        LAMBBDA_ROLE_ARN,
+        'python_lambda'
 
+    ))
