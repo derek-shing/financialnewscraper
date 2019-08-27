@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from  bs4 import BeautifulSoup
 import requests
-import pandas as pd
+
 
 POSTGRES_ADDRESS = 'dbtest.c0odp5hguxv4.us-west-2.rds.amazonaws.com' ## INSERT YOUR DB ADDRESS IF IT'S NOT ON PANOPLY
 POSTGRES_PORT = '5432'
@@ -40,7 +40,7 @@ news_in_db = session.query(News2)
 #for new in news_in_db:
 #    print(new.new_id)
 
-def create_seeking_alpha_df():
+def scrap_seeking_alpha():
     url = "https://seekingalpha.com/market-news"
     page = requests.get(url)
     soup = BeautifulSoup(page.text)
@@ -56,13 +56,11 @@ def create_seeking_alpha_df():
     date_list2 = [i.split()[0] for i in date_list]
     id_list2 = [i.split('-')[2] for i in id_list]
 
-    d={"id":id_list2,"date":date_list2,"heading":heading_list,"url":url_list}
-    df = pd.DataFrame(d)
 
     def db_contain_news(new_id):
         return session.query(News2).filter(News2.new_id==new_id).count()
 
-    not_exist_in_db = df['id'].apply(db_contain_news)==0
+
 
 
     def getcontext(url):
@@ -76,27 +74,36 @@ def create_seeking_alpha_df():
         context = [i.text for i in contexts]
         return context
 
-    url_list=df[not_exist_in_db]['url']
+    stop_index = len(id_list2)
+    for i in range(len(id_list2)):
+        if db_contain_news(id_list2[i]):
+            stop_index = i
+            break
 
-    point_list =[getcontext(i) for i in url_list]
+    id_list2 = id_list2[:stop_index]
+    date_list2 = date_list2[:stop_index]
+    heading_list = heading_list[:stop_index]
+    url_list = url_list[:stop_index]
+    point_list = [getcontext(i) for i in url_list]
 
-    finaldf=df[not_exist_in_db]
-    finaldf['summary']=point_list
-    return finaldf
+    for i in range(len(id_list2)):
+        new = News2(new_id=id_list2[i], date=date_list2[i], heading=heading_list[i], summary=point_list[i],
+                    url=url_list[i])
+        session.add(new)
+        session.commit()
+
+
+    return
 
 
 
 def handler(event, context):
-    df = create_seeking_alpha_df()
-    for index, row in df.iterrows():
-        new = News2(new_id=row['id'], date=row['date'], heading=row['heading'], summary=row['summary'], url=row['url'])
-        session.add(new)
-        session.commit()
+    scrap_seeking_alpha()
+
 
     return {
         'stateCode':200,
         'message':' Hello from lambda function',
-        'First new ID':new.heading
     }
 
 #print(news_in_db[60].heading)
