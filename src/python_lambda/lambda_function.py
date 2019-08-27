@@ -9,8 +9,8 @@ import requests
 
 POSTGRES_ADDRESS = 'dbtest.c0odp5hguxv4.us-west-2.rds.amazonaws.com' ## INSERT YOUR DB ADDRESS IF IT'S NOT ON PANOPLY
 POSTGRES_PORT = '5432'
-POSTGRES_USERNAME = "derek" ## CHANGE THIS TO YOUR PANOPLY/POSTGRES USERNAME
-POSTGRES_PASSWORD = 'temp1234' ## CHANGE THIS TO YOUR PANOPLY/POSTGRES PASSWORD
+POSTGRES_USERNAME = "" ## CHANGE THIS TO YOUR PANOPLY/POSTGRES USERNAME
+POSTGRES_PASSWORD = '' ## CHANGE THIS TO YOUR PANOPLY/POSTGRES PASSWORD
 POSTGRES_DBNAME = 'financial' ## CHANGE THIS TO YOUR DATABASE NAME
 # A long string that contains the necessary Postgres login information
 postgres_str = ('postgresql://{username}:{password}@{ipaddress}:{port}/{dbname}'.format(username=POSTGRES_USERNAME, password=POSTGRES_PASSWORD, ipaddress=POSTGRES_ADDRESS,port=POSTGRES_PORT, dbname=POSTGRES_DBNAME))
